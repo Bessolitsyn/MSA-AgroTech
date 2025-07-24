@@ -1,4 +1,4 @@
-@startuml агро_V1
+@startuml агро_V2
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
 title "Context Diagram  Альтернативный вариант"
 'title "Платформа управления животноводческим комплексом"
