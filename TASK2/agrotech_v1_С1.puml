@@ -1,0 +1,51 @@
+@startuml агро_V1
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' !include C4_Context.puml
+' !include C4_Container.puml
+' !include C4_Component.puml
+title "Container Diagram"
+
+Person(сотрудник, "дежурный сотрудник")
+
+
+System_Boundary(платформа, "Агротех  - платформа управления животноводческим комплексом") {
+
+    System_Boundary(databus, "система передачи и обработки данных", "сбор данных от технических систем, структурирование, хранение ") {        
+        Container(broker, "Брокер сообщений","RabbitMQ/Apache Kafka", "Шина данных")        
+        Container(storage, "Хранилище","?", "Шина данных")
+        Rel(broker, storage, "")
+    }
+    System_Boundary(животноводство,"система жизнеобеспечения животных", "Мниторинг состояния технических средств(кормушки, поилки и др)") {
+        Container(sensors, "Датчики", "", "")
+        Container(gateway, "Шлюз", "", "обработки и отправки сообщений")
+        Container(devices, "Автоматизированные устройства ", "", "кормления, подачи воды и т. д.")        
+        Rel(sensors, gateway, "")
+        Rel(devices, gateway, "")
+        Rel(gateway, broker, "")
+    }
+    System_Boundary(видео,"система видеонаблюдения за животными", "") {
+        Container(camera, "Камеры")
+        Container(streaming, "Шлюз", "", "обработки и передачи видео потока")
+        Container(recivers, " Видеорегистраторы")        
+        Rel(camera, streaming, "")
+        Rel(recivers, streaming, "")
+        
+    }
+    System_Boundary(цуп, "система мониторинга хозяйства", "управление,  мониторинг, анализ, оповещение, отчетность") {
+        Container(api, "")
+        Container(app, "Приложения")
+        Container(bi, "", "вычисление показателей, трендов, трендов")
+        Container(supervisor, "", "мониторинг состояния")
+    }
+    Container(agent, "агент", "система синхронизации с ЦОД Агротех")
+    Container(collector, "Система сбора данных от хозяйст")
+}
+System_Ext(ai, "ИИ-система мониторинга животных", "анализ видео") 
+Rel(streaming, ai, "")        
+Rel(ai, broker, "")        
+
+
+
+@enduml
