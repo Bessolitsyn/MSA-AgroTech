@@ -62,11 +62,13 @@ System_Boundary(платформа, "Агротех  - платформа упр
             Component(supervisorWebSocketController, "WebSocketController")
             Component(supervisorBrokerClient, "BrokerClient")
             Component(supervisorInteractor, "Interactor")
+            Component(supervisorNotifier, "Notifier")
             Component(supervisorIndicatorsProvider, "IndicatorsProvider")
             Component(supervisorIndicatorsEntities, "IndicatorsEntities")
             Component(supervisorDBController, "DBController")
             Rel(supervisorWebSocketController, supervisorInteractor,"")
-            Rel(supervisorInteractor, biReportsProvider,"")
+            Rel(supervisorInteractor, supervisorIndicatorsProvider,"")
+            Rel(supervisorInteractor, supervisorNotifier,"")
             Rel(supervisorIndicatorsProvider, supervisorBrokerClient,"")
             Rel(supervisorIndicatorsProvider, supervisorDBController,"")
             Rel(supervisorIndicatorsProvider, supervisorIndicatorsEntities,"")
@@ -98,7 +100,7 @@ System_Boundary(платформа, "Агротех  - платформа упр
 System_Ext(ai, "ИИ-система мониторинга животных", "анализ видео") 
 Rel(streaming, ai, "Потоковое видео","WebRTC")        
 Rel(ai, broker, "", "Kafka Protocol")  
-Rel(сотрудник, apiApiController, "использует")   
+Rel(сотрудник, app, "использует")   
    
 
 
