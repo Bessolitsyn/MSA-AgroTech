@@ -44,6 +44,7 @@ System_Boundary(платформа, "Агротех  - платформа упр
         Rel(broker, supervisor, "метрические данные", "Kafka Protocol")
         Rel(bi, storage, "")
         Rel(supervisor, storage, "")
+        Rel(api, storage, "")
         Rel(api, bi, "")
         Rel(api, supervisor, "")
 
