@@ -13,9 +13,9 @@ Person(сотрудник, "дежурный сотрудник")
 System_Boundary(платформа, "Агротех  - платформа управления животноводческим комплексом") {
 
     System_Boundary(databus, "система передачи и обработки данных", "сбор данных от технических систем, структурирование, хранение ") {        
-        Container(broker, "Брокер сообщений","RabbitMQ/Apache Kafka", "Шина данных")        
-        Container(storage, "Хранилище","?", "Шина данных")
-        Rel(broker, storage, "")
+        Container(broker, "Брокер сообщений","Apache Kafka", "Шина данных")        
+        
+        'Rel(broker, storage, "")
     }
     System_Boundary(животноводство,"система жизнеобеспечения животных", "Мниторинг состояния технических средств(кормушки, поилки и др)") {
         Container(sensors, "Датчики", "", "")
@@ -23,7 +23,7 @@ System_Boundary(платформа, "Агротех  - платформа упр
         Container(devices, "Автоматизированные устройства ", "", "кормления, подачи воды и т. д.")        
         Rel(sensors, gateway, "")
         Rel(devices, gateway, "")
-        Rel(gateway, broker, "")
+        Rel(gateway, broker, "", "Kafka Protocol")
     }
     System_Boundary(видео,"система видеонаблюдения за животными", "") {
         Container(camera, "Камеры")
@@ -34,17 +34,33 @@ System_Boundary(платформа, "Агротех  - платформа упр
         
     }
     System_Boundary(цуп, "система мониторинга хозяйства", "управление,  мониторинг, анализ, оповещение, отчетность") {
-        Container(api, "")
-        Container(app, "Приложения")
-        Container(bi, "", "вычисление показателей, трендов, трендов")
-        Container(supervisor, "", "мониторинг состояния")
+        Container(api, "API")
+        Container(app, "приложения")
+        Container(bi, "аналитический сервис", "", "вычисление показателей, трендов и др.")
+        Container(supervisor, "сервис мониторинга", "", "мониторинг состояния, оповещения")
+        ContainerDb(storage, "xранилище","PostgeSQL", "")
+        Rel(app, api, "")
+        Rel(broker, bi, "метрические данные", "Kafka Protocol")
+        Rel(broker, supervisor, "метрические данные", "Kafka Protocol")
+        Rel(bi, storage, "")
+        Rel(supervisor, storage, "")
+        Rel(api, storage, "")
+        Rel(api, bi, "")
+        Rel(api, supervisor, "")
+
+        
     }
-    Container(agent, "агент", "система синхронизации с ЦОД Агротех")
-    Container(collector, "Система сбора данных от хозяйст")
+    Container(agent, "агент", "", "сервис синхронизации с ЦОД Агротех")
+    Container(collector, "сервис сбора данных от хозяйст")
+    Rel_U(agent, collector, "REST")
+    Rel_U(agent, storage, "")        
+
 }
 System_Ext(ai, "ИИ-система мониторинга животных", "анализ видео") 
-Rel(streaming, ai, "")        
-Rel(ai, broker, "")        
+Rel(streaming, ai, "Потоковое видео","WebRTC")        
+Rel(ai, broker, "", "Kafka Protocol")  
+Rel(сотрудник, app, "использует")   
+   
 
 
 
