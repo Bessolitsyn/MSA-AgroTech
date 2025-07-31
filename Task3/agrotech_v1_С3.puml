@@ -15,8 +15,6 @@ System_Boundary(платформа, "Агротех  - платформа упр
 
     System_Boundary(databus, "система передачи и обработки данных", "сбор данных от технических систем, структурирование, хранение ") {        
         Container(broker, "Брокер сообщений","Apache Kafka", "Шина данных")        
-        
-        'Rel(broker, storage, "")
     }
     System_Boundary(животноводство,"система жизнеобеспечения животных", "Мниторинг состояния технических средств(кормушки, поилки и др)") {
         Container(sensors, "Датчики", "", "")
@@ -41,7 +39,6 @@ System_Boundary(платформа, "Агротех  - платформа упр
             Component(apiGatewayService, "GatewayService")
             Rel(apiApiController, apiGatewayService, "")
             Rel(apiApiController, apiAuth_Service, "")
-            Rel(apiGatewayService, apiAuth_Service, "")
 
         }
         Container(app, "приложения")
@@ -74,7 +71,7 @@ System_Boundary(платформа, "Агротех  - платформа упр
             Rel(supervisorIndicatorsProvider, supervisorIndicatorsEntities,"")
         }
         
-        ContainerDb(storage, "xранилище","PostgeSQL", "")
+        ContainerDb(storage, "Хранилище","PostgeSQL", "")
         Rel(app, apiApiController, "")
         Rel(broker, biBrokerClient, "метрические данные", "Kafka Protocol")
         Rel(broker, supervisorBrokerClient, "метрические данные", "Kafka Protocol")
@@ -89,13 +86,15 @@ System_Boundary(платформа, "Агротех  - платформа упр
         Component(agentSyncController, "SyncController")
         Component(agentDataProvider, "DataProvider")
         Rel(agentSyncController,agentDataProvider,"")
-    }
-    Container_Boundary(collector, "сервис сбора данных от хозяйст"){
-        Component(collectorApi, "Api")
-    }
-    Rel(agentSyncController, collectorApi, "REST")
+    }    
     Rel(agentDataProvider, storage, "")        
 
+}
+
+Container_Boundary(collector, "сервис сбора данных от хозяйст"){
+        Component(collectorApi, "RESTController")
+        Component(collectorInput, "DataIntegrator")
+        Rel_L(agentSyncController, collectorApi, "REST")
 }
 System_Ext(ai, "ИИ-система мониторинга животных", "анализ видео") 
 Rel(streaming, ai, "Потоковое видео","WebRTC")        

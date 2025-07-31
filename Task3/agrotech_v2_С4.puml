@@ -1,0 +1,223 @@
+@startuml агро_V2
+
+rectangle "API"{                    
+class ApiController {
+        +routeRequest(request: Request): Response
+        +handleWebSocket(session: WebSocketSession)
+        -authenticate(token: String): User
+        -authorize(user: User): Boolean
+    }
+
+    class AuthService {
+        +validateToken(token: String): User
+        +generateToken(user: User): String
+    }
+
+    class User {
+        -id: String
+        -username: String
+        -role: Role
+        +getRole(): Role
+    }
+
+    class Role {
+        ...
+    }
+
+    class PermissionManager {
+        +checkAccess(user: User, resource: String): Boolean
+        +getRoles(): List~Role~
+    }
+
+    class Request {
+        -path: String
+        -method: String
+        -headers: Map
+        -body: Json
+        +getHeader(name: String): String
+    }
+
+    class Response {
+        -status: int
+        -body: Json
+        +setStatus(code: Int)
+        +setBody(data: Json)
+    }
+
+    class WebSocketSession {
+        -id: String
+        -user: User
+        +sendMessage(message: String)
+    }
+
+    class GatewayService {
+        -restClient: RestClient
+        -wsClient: WsClient
+        +processRequest(user: User, data: Json): Json
+        +broadcast(message: String)
+        +sendToUser(userId: String, message: String)
+    }
+
+    class RestClient {
+        +get(url: String): Json
+        +post(url: String, body: Json): Json
+    }
+
+    class WsClient {
+        +connect(url: String): WebSocketConnection
+        +send(connection: WebSocketConnection, message: String)
+    }
+
+    ApiController --> Request
+    ApiController --> Response
+    ApiController --> WebSocketSession
+    ApiController --> AuthService
+    ApiController --> PermissionManager
+    ApiController --> User
+    User --> Role
+    AuthService --> User
+    PermissionManager --> Role
+    ApiController --> GatewayService
+    GatewayService --> RestClient
+    GatewayService --> WsClient
+
+}
+rectangle supervisor {
+    class WebSocketController {
+        +handleWebSocket(session: WebSocketSession)        
+    }
+    class Interactor {
+        -Notifier: Notifier
+        -NotifyRules: List<NotifyRule>
+        +processIndicators()
+
+    }
+    class Notifier {
+        +notify(userId: String, message: String)
+    }
+    class IndicatorsProvider {
+        -IndicatorsPool: List<Indicator>
+        -ValidationRules: List<Rule>
+        +process(message: Message)
+        +validate(data: Json): Boolean
+        +startMonitoring()
+    }    
+    class DBController {
+        +process(indicator: Indicator)        
+    } 
+    class DataSender{
+            -coreBrokerClient: BrokerClient
+            +send(data: DataPart)           
+        }
+    class BrokerClient {
+        -bootstrapServers: String
+        -topic: String
+        -groupId: String
+        +consume(): List<Message>
+        +produce(data: DataPart)
+    }  
+    class Indicator {
+        -name: String
+        -value: String        
+    }
+    class Message {
+        -key: String
+        -value: Json
+        -timestamp: Long
+        +getValue(): Json
+    }
+    WebSocketController --> Interactor
+    Interactor --> Notifier
+    Interactor --> IndicatorsProvider
+    Interactor --> Indicator
+    IndicatorsProvider --> DBController
+    IndicatorsProvider --> BrokerClient
+    IndicatorsProvider --> Indicator
+    IndicatorsProvider --> Message
+    IndicatorsProvider --> DataSender
+    DataSender --> BrokerClient
+    BrokerClient --> Message
+}
+rectangle bi {
+    class RestController {
+        +processRequest(user: User, data: Json): Json        
+    }
+    class Interactor {
+        +getReport(report: string): Json  
+        +getReports(): Json  
+    }
+    class ReportsProvider {        
+        -ValidationRules: List<Rule>
+        +process(messages: List<Message>)
+        +validate(data: Json): Boolean
+        +getReport(report: Report)        
+        +getReports(): List<Reports>
+        +startAnalysis()
+    }   
+      class ReportsBuilder {        
+        +calculateReport(messages : List<Message>): Report
+    }
+      
+    class DBController {
+        +read(report: Report): Report       
+        +save(report: Report)                
+    } 
+    class DataSender{
+            -coreBrokerClient: BrokerClient
+            +send(data: DataPart)           
+        }
+    
+    class BrokerClient {
+        -bootstrapServers: String
+        -topic: String
+        -groupId: String
+        +consume(): List<Message>
+        +produce(data: DataPart)
+    }  
+    class Report {
+        +name: String
+        +getData(): Json        
+    }
+    class Message {
+        -key: String
+        -value: Json
+        -timestamp: Long
+        +getValue(): Json
+    }
+
+    RestController --> Interactor
+    Interactor --> ReportsProvider
+    BrokerClient --> Message
+    ReportsProvider --> ReportsBuilder
+    ReportsProvider --> DBController
+    ReportsProvider --> BrokerClient
+    ReportsProvider --> Message
+    ReportsProvider --> Report
+    ReportsProvider --> DataSender
+    Interactor --> Report
+    DataSender --> BrokerClient
+    
+
+}
+
+database "Хранилище" as db {
+}  
+
+bi.DBController --> db
+supervisor.DBController --> db
+rectangle "Брокер сообщений" {
+    rectangle "Apache Kafka" as broker {        
+    }
+}
+bi.BrokerClient --> broker
+supervisor.BrokerClient --> broker
+rectangle "АгроПром Х - Цифровая Платформа" {
+    rectangle "сервис сбора данных от хозяйст"{
+        rectangle "Брокер сообщений" as core_kafka {            
+        }
+    }
+}
+bi.DataSender --> core_kafka
+supervisor.DataSender --> core_kafka
+
+@enduml

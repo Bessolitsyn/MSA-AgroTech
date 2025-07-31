@@ -1,4 +1,4 @@
-@startuml агро_V1
+@startuml агро_V1_С2
 
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
@@ -46,15 +46,18 @@ System_Boundary(платформа, "Агротех  - платформа упр
         Rel(supervisor, storage, "")
         Rel(api, bi, "")
         Rel(api, supervisor, "")
-
-        
     }
-    Container(agent, "агент", "", "сервис синхронизации с ЦОД Агротех")
-    Container(collector, "сервис сбора данных от хозяйст")
-    Rel_U(agent, collector, "REST")
-    Rel_U(agent, storage, "")        
 
+    System_Boundary(agent_, "система синхронизации",""){
+        Container(agent, "агент", "", "сервис синхронизации")
+        Rel(agent, storage, "")
+    }
 }
+System_Boundary(платформаX, "АгроПром Х - Цифровая платформа",""){
+    Container(collector, "сервис сбора данных от хозяйст")        
+}
+Rel(agent, collector, "REST")
+
 System_Ext(ai, "ИИ-система мониторинга животных", "анализ видео") 
 Rel(streaming, ai, "Потоковое видео","WebRTC")        
 Rel(ai, broker, "", "Kafka Protocol")  

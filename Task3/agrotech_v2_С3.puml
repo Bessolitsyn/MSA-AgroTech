@@ -1,6 +1,7 @@
-@startuml агро_V1
+@startuml агро_V2
 
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
 
 ' !include C4_Context.puml
 ' !include C4_Container.puml
@@ -13,9 +14,7 @@ Person(сотрудник, "дежурный сотрудник")
 System_Boundary(платформа, "Агротех  - платформа управления животноводческим комплексом") {
 
     System_Boundary(databus, "система передачи и обработки данных", "сбор данных от технических систем, структурирование, хранение ") {        
-        Container(broker, "Брокер сообщений","Apache Kafka", "Шина данных")        
-        
-        'Rel(broker, storage, "")
+        Container(broker, "Брокер сообщений","Apache Kafka", "Шина данных")       
     }
     System_Boundary(животноводство,"система жизнеобеспечения животных", "Мниторинг состояния технических средств(кормушки, поилки и др)") {
         Container(sensors, "Датчики", "", "")
@@ -34,33 +33,74 @@ System_Boundary(платформа, "Агротех  - платформа упр
         
     }
     System_Boundary(цуп, "система мониторинга хозяйства", "управление,  мониторинг, анализ, оповещение, отчетность") {
-        Container(api, "API")
+        Container_Boundary(api, "API"){
+            Component(apiApiController,"ApiController")
+            Component(apiAuth_Service,"Auth_Service")
+            Component(apiGatewayService, "GatewayService")
+            Rel(apiApiController, apiGatewayService, "")
+            Rel(apiApiController, apiAuth_Service, "")
+
+        }
         Container(app, "приложения")
-        Container(bi, "аналитический сервис", "", "вычисление показателей, трендов и др.")
-        Container(supervisor, "сервис мониторинга", "", "мониторинг состояния, оповещения")
+        Container_Boundary(bi, "аналитический сервис", "", "вычисление показателей, трендов и др."){
+            Component(biRestController, "RestController")
+            Component(biBrokerClient, "BrokerClient")
+            Component(biInteractor, "Interactor")
+            Component(biReportsProvider, "ReportsProvider")
+            Component(biReportsEntities, "ReportsEntities")
+            Component(biDBController, "DBController")
+             Component(biSender, "DataSender")
+            Rel(biRestController, biInteractor,"")
+            Rel(biInteractor, biReportsProvider,"")
+            Rel(biInteractor, biSender,"")
+            Rel(biReportsProvider, biBrokerClient,"")
+            Rel(biReportsProvider, biDBController,"")
+            Rel(biReportsProvider, biReportsEntities,"")
+        }
+        Container_Boundary(supervisor, "сервис мониторинга", "", "мониторинг состояния, оповещения"){
+            Component(supervisorWebSocketController, "WebSocketController")
+            Component(supervisorBrokerClient, "BrokerClient")
+            Component(supervisorInteractor, "Interactor")
+            Component(supervisorNotifier, "Notifier")
+            Component(supervisorIndicatorsProvider, "IndicatorsProvider")
+            Component(supervisorIndicatorsEntities, "IndicatorsEntities")
+            Component(supervisorDBController, "DBController")
+            Component(supervisorSender, "DataSender")
+            Rel(supervisorWebSocketController, supervisorInteractor,"")
+            Rel(supervisorInteractor, supervisorIndicatorsProvider,"")
+            Rel(supervisorInteractor, supervisorNotifier,"")
+            Rel(supervisorInteractor, supervisorSender,"")
+            Rel(supervisorIndicatorsProvider, supervisorBrokerClient,"")
+            Rel(supervisorIndicatorsProvider, supervisorDBController,"")
+            Rel(supervisorIndicatorsProvider, supervisorIndicatorsEntities,"")
+        }
+        
         ContainerDb(storage, "xранилище","PostgeSQL", "")
-        Rel(app, api, "")
-        Rel(broker, bi, "метрические данные", "Kafka Protocol")
-        Rel(broker, supervisor, "метрические данные", "Kafka Protocol")
-        Rel(bi, storage, "")
-        Rel(supervisor, storage, "")
-        Rel(api, storage, "")
-        Rel(api, bi, "")
-        Rel(api, supervisor, "")
+        Rel(app, apiApiController, "")
+        Rel(broker, biBrokerClient, "метрические данные", "Kafka Protocol")
+        Rel(broker, supervisorBrokerClient, "метрические данные", "Kafka Protocol")
+        Rel(biDBController, storage, "")
+        Rel(supervisorDBController, storage, "")
+        Rel(apiGatewayService, biRestController, "","REST")
+        Rel(apiGatewayService, supervisorWebSocketController, "","WebSocket")
 
         
     }
-    Container(agent, "агент", "", "сервис синхронизации с ЦОД Агротех")
-    Container(collector, "сервис сбора данных от хозяйст")
-    Rel_U(agent, collector, "REST")
-    Rel_U(agent, storage, "")        
-
 }
+
+System_Boundary(платформаX, "АгроПром Х - Цифровая платформа",""){
+    Container_Ext(kafka, "Брокер сообщений", "Apache Kafka", "Шина данных")
+    Rel_L(biSender, kafka, "")
+    Rel_L(supervisorSender, kafka, "")
+}
+
+
 System_Ext(ai, "ИИ-система мониторинга животных", "анализ видео") 
 Rel(streaming, ai, "Потоковое видео","WebRTC")        
 Rel(ai, broker, "", "Kafka Protocol")  
 Rel(сотрудник, app, "использует")   
    
+
 
 
 

@@ -1,4 +1,4 @@
-@startuml агро_V1
+@startuml агро_V2_С2
 
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
@@ -13,7 +13,7 @@ Person(сотрудник, "дежурный сотрудник")
 System_Boundary(платформа, "Агротех  - платформа управления животноводческим комплексом") {
 
     System_Boundary(databus, "система передачи и обработки данных", "сбор данных от технических систем, структурирование, хранение ") {        
-        Container(broker, "Брокер сообщений","RabbitMQ", "Шина данных")        
+        Container(broker, "Брокер сообщений","Apache Kafka", "Шина данных")        
         
         'Rel(broker, storage, "")
     }
@@ -23,7 +23,7 @@ System_Boundary(платформа, "Агротех  - платформа упр
         Container(devices, "Автоматизированные устройства ", "", "кормления, подачи воды и т. д.")        
         Rel(sensors, gateway, "")
         Rel(devices, gateway, "")
-        Rel(gateway, broker, "", "")
+        Rel(gateway, broker, "", "Kafka Protocol")
     }
     System_Boundary(видео,"система видеонаблюдения за животными", "") {
         Container(camera, "Камеры")
@@ -40,8 +40,8 @@ System_Boundary(платформа, "Агротех  - платформа упр
         Container(supervisor, "сервис мониторинга", "", "мониторинг состояния, оповещения")
         ContainerDb(storage, "xранилище","PostgeSQL", "")
         Rel(app, api, "")
-        Rel(broker, bi, "метрические данные", "")
-        Rel(broker, supervisor, "метрические данные", "")
+        Rel(broker, bi, "метрические данные", "Kafka Protocol")
+        Rel(broker, supervisor, "метрические данные", "Kafka Protocol")
         Rel(bi, storage, "")
         Rel(supervisor, storage, "")
         Rel(api, bi, "")
@@ -49,15 +49,17 @@ System_Boundary(платформа, "Агротех  - платформа упр
 
         
     }
-    Container(agent, "агент", "", "сервис синхронизации с ЦОД Агротех")
-    Container(collector, "сервис сбора данных от хозяйст")
-    Rel_U(agent, collector, "REST")
-    Rel_U(agent, storage, "")        
-
 }
+
+System_Boundary(платформаX, "АгроПром Х - Цифровая платформа",""){
+        Container_Ext(kafka, "Брокер сообщений", "Apache Kafka", "Шина данных")
+        Rel(bi, kafka, "")
+        Rel(supervisor, kafka, "")
+}
+
 System_Ext(ai, "ИИ-система мониторинга животных", "анализ видео") 
 Rel(streaming, ai, "Потоковое видео","WebRTC")        
-Rel(ai, broker, "", "")  
+Rel(ai, broker, "", "Kafka Protocol")  
 Rel(сотрудник, app, "использует")   
    
 
