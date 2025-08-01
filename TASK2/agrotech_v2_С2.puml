@@ -1,0 +1,72 @@
+@startuml агро_V2_С2
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' !include C4_Context.puml
+' !include C4_Container.puml
+' !include C4_Component.puml
+title "Container Diagram"
+
+Person(сотрудник, "дежурный сотрудник")
+
+
+System_Boundary(платформа, "Агротех  - платформа управления животноводческим комплексом") {
+
+    System_Boundary(databus, "система передачи и обработки данных", "сбор данных от технических систем, структурирование, хранение ") {        
+        Container(broker, "Брокер сообщений","Apache Kafka", "Шина данных")        
+        
+        'Rel(broker, storage, "")
+    }
+    System_Boundary(животноводство,"система жизнеобеспечения животных", "Мниторинг состояния технических средств(кормушки, поилки и др)") {
+        Container(sensors, "Датчики", "", "")
+        Container(gateway, "Шлюз", "", "обработки и отправки сообщений")
+        Container(devices, "Автоматизированные устройства ", "", "кормления, подачи воды и т. д.")        
+        Rel(sensors, gateway, "")
+        Rel(devices, gateway, "")
+        Rel(gateway, broker, "", "Kafka Protocol")
+    }
+    System_Boundary(видео,"система видеонаблюдения за животными", "") {
+        Container(camera, "Камеры")
+        Container(streaming, "Шлюз", "", "обработки и передачи видео потока")
+        Container(recivers, " Видеорегистраторы")        
+        Rel(camera, streaming, "")
+        Rel(recivers, streaming, "")
+        
+    }
+    System_Boundary(цуп, "система мониторинга хозяйства", "управление,  мониторинг, анализ, оповещение, отчетность") {
+        Container(api, "API")
+        Container(app, "приложения")
+        Container(bi, "аналитический сервис", "", "вычисление показателей, трендов и др.")
+        Container(supervisor, "сервис мониторинга", "", "мониторинг состояния, оповещения")
+        ContainerDb(storage, "xранилище","PostgeSQL", "")
+        Rel(app, api, "")
+        Rel(broker, bi, "метрические данные", "Kafka Protocol")
+        Rel(broker, supervisor, "метрические данные", "Kafka Protocol")
+        Rel(bi, storage, "")
+        Rel(supervisor, storage, "")
+        Rel(api, bi, "")
+        Rel(api, supervisor, "")
+
+        
+    }    
+}
+
+System_Boundary(платформа_, "ЦОД") {                    
+    System_Boundary(ai_,"",""){
+        Container(ai, "ИИ-система мониторинга животных", "анализ видео") 
+    }
+    System_Ext(платформаX, "АгроПром Х - Цифровая платформа",""){
+        Container_Ext(kafka, "Брокер сообщений", "Apache Kafka", "Шина данных")
+        Rel(bi, kafka, "")
+        Rel(supervisor, kafka, "")
+    }            
+}
+
+Rel(streaming, ai, "Потоковое видео","WebRTC")        
+Rel(ai, broker, "", "Kafka Protocol")  
+Rel(сотрудник, app, "использует")   
+   
+
+
+
+@enduml
