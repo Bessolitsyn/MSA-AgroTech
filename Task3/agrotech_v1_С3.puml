@@ -87,7 +87,11 @@ System_Boundary(платформа, "Агротех  - платформа упр
         Component(agentDataProvider, "DataProvider")
         Rel(agentSyncController,agentDataProvider,"")
     }    
-    Rel(agentDataProvider, storage, "")        
+    Rel(agentDataProvider, storage, "")    
+
+    System_Boundary(ai_,"",""){
+        Container(ai, "ИИ-система мониторинга животных", "анализ видео") 
+    }    
 
 }
 
@@ -96,7 +100,7 @@ Container_Boundary(collector, "сервис сбора данных от хоз�
         Component(collectorInput, "DataIntegrator")
         Rel_L(agentSyncController, collectorApi, "REST")
 }
-System_Ext(ai, "ИИ-система мониторинга животных", "анализ видео") 
+
 Rel(streaming, ai, "Потоковое видео","WebRTC")        
 Rel(ai, broker, "", "Kafka Protocol")  
 Rel(сотрудник, app, "использует")   

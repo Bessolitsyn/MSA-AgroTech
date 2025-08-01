@@ -48,16 +48,20 @@ System_Boundary(платформа, "Агротех  - платформа упр
         Rel(api, supervisor, "")
 
         
-    }
+    }    
 }
 
-System_Boundary(платформаX, "АгроПром Х - Цифровая платформа",""){
+System_Boundary(платформа_, "ЦОД") {                    
+    System_Boundary(ai_,"",""){
+        Container(ai, "ИИ-система мониторинга животных", "анализ видео") 
+    }
+    System_Ext(платформаX, "АгроПром Х - Цифровая платформа",""){
         Container_Ext(kafka, "Брокер сообщений", "Apache Kafka", "Шина данных")
         Rel(bi, kafka, "")
         Rel(supervisor, kafka, "")
+    }            
 }
 
-System_Ext(ai, "ИИ-система мониторинга животных", "анализ видео") 
 Rel(streaming, ai, "Потоковое видео","WebRTC")        
 Rel(ai, broker, "", "Kafka Protocol")  
 Rel(сотрудник, app, "использует")   
